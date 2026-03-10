@@ -135,9 +135,10 @@ public class CustomerDao {
                 SELECT c.fiscal_code,
                        c.first_name,
                        c.last_name,
-                       a.balance
+                       SUM(a.balance) AS balance
                 FROM customers c
                 INNER JOIN accounts a ON c.id = a.customer_id
+                GROUP BY c.fiscal_code, c.last_name
                 ORDER BY c.last_name, c.first_name
                 """;
         Connection conn = DatabaseManager.getConnection();
