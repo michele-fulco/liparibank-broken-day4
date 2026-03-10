@@ -69,17 +69,21 @@ public class AccountDao {
      * Cerca un conto per id.
      */
     public Optional<Account> findById(long id) throws SQLException {
-        Connection conn = DatabaseManager.getConnection();
-        try {
-            PreparedStatement pstmt = conn.prepareStatement(
-                    "SELECT id, iban, balance, account_type, customer_id "
-                    + "FROM accounts WHERE id = ?");
+
+        try(Connection conn = DatabaseManager.getConnection();PreparedStatement pstmt = conn.prepareStatement(
+                "SELECT id, iban, balance, account_type, customer_id "
+                        + "FROM accounts WHERE id = ?");) {
             pstmt.setLong(1, id);
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next()) {
-                return Optional.of(mapRow(rs));
+            try(ResultSet rs = pstmt.executeQuery();) {
+                if (rs.next()) {
+                    return Optional.of(mapRow(rs));
+                }
+                return Optional.empty();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }finally {
+                DatabaseManager.releaseConnection(conn);
             }
-            return Optional.empty();
         } catch (SQLException e) {
             throw e;
         }

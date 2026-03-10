@@ -104,17 +104,24 @@ public class CustomerDao {
      * Cerca un cliente per id.
      */
     public Optional<Customer> findById(long id) throws SQLException {
-        Connection conn = DatabaseManager.getConnection();
-        try {
-            PreparedStatement pstmt = conn.prepareStatement(
-                    "SELECT id, fiscal_code, first_name, last_name, customer_type "
-                    + "FROM customers WHERE id = ?");
+
+        try(Connection conn = DatabaseManager.getConnection();PreparedStatement pstmt = conn.prepareStatement(
+                "SELECT id, fiscal_code, first_name, last_name, customer_type "
+                        + "FROM customers WHERE id = ?");) {
+
             pstmt.setLong(1, id);
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next()) {
-                return Optional.of(mapRow(rs));
+            try(ResultSet rs = pstmt.executeQuery();) {
+
+                if (rs.next()) {
+                    return Optional.of(mapRow(rs));
+                }
+                return Optional.empty();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
             }
-            return Optional.empty();
+            finally {
+                DatabaseManager.releaseConnection(conn);
+            }
         } catch (SQLException e) {
             throw e;
         }
